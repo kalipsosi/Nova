@@ -1,0 +1,16 @@
+[Unit]
+Description=Nova encrypted PostgreSQL backup
+After=postgresql.service
+Requires=postgresql.service
+
+[Service]
+Type=oneshot
+User=postgres
+Group=postgres
+EnvironmentFile=/etc/nova/backup.env
+ExecStart=/usr/bin/bash /usr/local/sbin/nova-backup
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/backups/nova
+UMask=0077
