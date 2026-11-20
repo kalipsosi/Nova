@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Nova — автономный прототип</title>
+  <style>
+    :root {
+      --ink: #fffaff;
+      --muted: #bcb5cf;
+      --bg: #100e1d;
+      --bg-deep: #0a0911;
+      --glass: rgba(40, 32, 66, .54);
+      --glass-strong: rgba(49, 39, 82, .74);
+      --glass-line: rgba(255, 255, 255, .17);
+      --glass-shine: rgba(255, 255, 255, .2);
+      --violet: #c8b2ff;
+      --violet-deep: #8770d0;
+      --turquoise: #39bec8;
+      --turquoise-soft: #9de8e4;
+      --coral: #f57d8a;
+      --coral-soft: #ffb2bb;
+      --heart: #f39ab3;
+      --shadow: 0 28px 80px rgba(0, 0, 0, .36);
+      --round: 24px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-width: 320px; min-height: 100%; }
+    body {
+      min-height: 100vh;
+      overflow-x: hidden;
+      background:
+        radial-gradient(circle at 12% 0%, rgba(121, 96, 195, .34), transparent 31rem),
+        radial-gradient(circle at 95% 25%, rgba(38, 156, 178, .17), transparent 25rem),
+        linear-gradient(150deg, #1a1430 0%, var(--bg) 50%, #0c0a14 100%);
+    }
+    button { font: inherit; color: inherit; cursor: pointer; }
+    .prototype-note {
+      position: fixed; top: 12px; right: 14px; z-index: 20; padding: 7px 11px;
+      border: 1px solid rgba(255,255,255,.2); border-radius: 99px; background: rgba(16, 14, 29, .55);
+      color: var(--muted); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; backdrop-filter: blur(16px);
+    }
+    .app { width: min(100%, 430px); min-height: 100vh; margin: 0 auto; padding: 26px 17px 34px; position: relative; }
+    .topbar { display: flex; align-items: flex-start; justify-content: space-between; margin: 18px 2px 21px; }
+    .wordmark { font: 600 31px/1 Georgia, "Times New Roman", serif; letter-spacing: -.06em; }
+    .subline { margin-top: 7px; color: var(--muted); font-size: 11px; }
+    .avatar { width: 39px; height: 39px; display: grid; place-items: center; border-radius: 50%; color: #21172e; background: var(--violet); font-weight: 700; }
+    .glass { border: 1px solid var(--glass-line); background: linear-gradient(145deg, rgba(255,255,255,.10), transparent 22%), var(--glass); box-shadow: inset 0 1px 0 var(--glass-shine), var(--shadow); backdrop-filter: blur(24px) saturate(135%); -webkit-backdrop-filter: blur(24px) saturate(135%); }
+    .week-strip { padding: 14px 5px 11px; border-radius: 22px; display: grid; grid-template-columns: 24px repeat(7, minmax(0, 1fr)) 24px; gap: 1px; align-items: center; }
+    .week-arrow { border: 0; background: transparent; color: var(--muted); font-size: 24px; padding: 5px 1px; }
+    .week-cell { border: 0; background: transparent; padding: 2px 0; border-radius: 12px; }
+    .week-cell .date { width: 33px; height: 33px; }
+    .week-cell.period-predicted .date, .week-cell.ovulation-predicted .date { border: 1px dashed var(--tone); }
+    .week-cell[data-kind="period"] { --tone: var(--coral-soft); }
+    .week-cell[data-kind="period-predicted"] { --tone: var(--coral); }
+    .week-cell[data-kind="ovulation"] { --tone: var(--turquoise-soft); }
+    .week-cell[data-kind="ovulation-predicted"] { --tone: var(--turquoise); }
+    [data-kind="period"], [data-kind="period-predicted"] { --tone: var(--coral-soft); }
+    [data-kind="ovulation"], [data-kind="ovulation-predicted"] { --tone: var(--turquoise-soft); }
+    .week-cell[data-kind="ordinary"] .date { color: var(--ink); }
+    .week-cell { min-width: 0; display: grid; justify-items: center; gap: 6px; color: var(--muted); font-size: 10px; }
+    .week-cell .cycle-day { color: rgba(255,255,255,.48); font-size: 9px; }
+    .week-cell .date { width: 35px; height: 35px; display: grid; place-items: center; border: 1px solid transparent; border-radius: 50%; color: var(--ink); font-size: 13px; }
+    .week-cell.selected .date { border-color: var(--turquoise); color: var(--turquoise-soft); box-shadow: 0 0 0 4px rgba(57,190,200,.10); }
+    .week-cell.period .date { color: var(--coral-soft); }
+    .week-cell .tiny-mark { height: 4px; font-size: 13px; line-height: 4px; color: var(--heart); }
+    .hero { min-height: 309px; margin: 14px 0; padding: 22px 18px 19px; border-radius: 30px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; text-align: center; }
+    .hero:before { content: ""; position: absolute; inset: 12% -18% -50%; border-radius: 50%; background: radial-gradient(circle, rgba(57,190,200,.22), transparent 64%); pointer-events: none; }
+    .hero .eyebrow { position: relative; color: var(--muted); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; }
+    .cycle-orb { width: 190px; height: 190px; margin: 10px 0 15px; display: grid; place-items: center; position: relative; border-radius: 50%; }
+    .cycle-orb:before { content: ""; position: absolute; inset: 0; border-radius: inherit; background: radial-gradient(circle at 31% 26%, rgba(255,255,255,.46), transparent 17%), linear-gradient(145deg, rgba(57,190,200,.98), rgba(87,77,165,.9)); box-shadow: 0 0 0 10px rgba(57,190,200,.08), 0 24px 60px rgba(33, 160, 178, .26), inset 12px 12px 30px rgba(255,255,255,.12), inset -16px -19px 35px rgba(11, 10, 33, .24); }
+    .cycle-orb.period:before { background: radial-gradient(circle at 31% 26%, rgba(255,255,255,.42), transparent 17%), linear-gradient(145deg, #f99aa3, #c95985); box-shadow: 0 0 0 10px rgba(245,125,138,.08), 0 24px 60px rgba(245, 90, 121, .24), inset 12px 12px 30px rgba(255,255,255,.12), inset -16px -19px 35px rgba(80, 10, 42, .23); }
+    .cycle-orb.projected:before { background: radial-gradient(circle at 31% 26%, rgba(255,255,255,.32), transparent 17%), linear-gradient(145deg, rgba(57,190,200,.27), rgba(87,77,165,.42)); border: 2px dashed var(--turquoise); box-shadow: 0 0 0 10px rgba(57,190,200,.06); }
+    .orb-content { z-index: 1; position: relative; display: grid; gap: 4px; }
+    .orb-label { color: rgba(255,255,255,.76); font-size: 11px; }
+    .orb-title { font: 600 22px/1.05 Georgia, serif; }
+    .orb-cycle { color: rgba(255,255,255,.74); font-size: 11px; }
+    .hero-date { position: relative; color: var(--muted); font-size: 12px; }
+    .action-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .action { min-height: 73px; padding: 11px 7px; display: grid; justify-items: center; align-content: center; gap: 7px; border: 1px solid var(--glass-line); border-radius: 18px; background: rgba(255,255,255,.07); box-shadow: inset 0 1px 0 rgba(255,255,255,.12); }
+    .action:hover, .action:focus-visible { border-color: var(--violet); outline: 0; transform: translateY(-2px); background: rgba(200,178,255,.13); }
+    .action-icon { font-size: 21px; line-height: 1; }
+    .action-label { color: var(--muted); font-size: 11px; line-height: 1.13; text-align: center; }
+    .section-head { display: flex; align-items: end; justify-content: space-between; margin: 24px 3px 9px; }
+    .section-head h2 { margin: 0; font: 500 18px Georgia, serif; }
+    .section-head span { color: var(--muted); font-size: 11px; }
+    .tip { padding: 16px; border-radius: 21px; display: grid; gap: 8px; }
+    .tip strong { font-size: 13px; }
+    .tip p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .calendar-view { display: none; }
+    .calendar-view.open { display: block; animation: rise .3s ease both; }
+    .day-view.hidden { display: none; }
+    .period-tools { display: grid; gap: 9px; margin-top: 14px; padding: 15px; border-radius: 20px; }
+    .period-tools p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
+    .period-tools[hidden] { display: none; }
+    .calendar-header { display: flex; align-items: center; justify-content: space-between; margin: 18px 2px 14px; }
+    .calendar-header h2 { margin: 0; font: 500 23px Georgia, serif; text-transform: capitalize; }
+    .circle-button { width: 36px; height: 36px; border: 1px solid var(--glass-line); border-radius: 50%; background: rgba(255,255,255,.07); }
+    .month-card { padding: 14px 10px 17px; border-radius: 24px; }
+    .month-week, .month-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+    .month-week { margin-bottom: 9px; color: var(--muted); font-size: 10px; text-align: center; }
+    .month-days { row-gap: 9px; }
+    .month-days button { min-height: 46px; position: relative; border: 0; background: transparent; border-radius: 15px; color: var(--ink); }
+    .month-days button:hover, .month-days button:focus-visible { background: rgba(255,255,255,.10); outline: 0; }
+    .month-days button.selected { color: var(--ink); box-shadow: inset 0 0 0 2px var(--turquoise); }
+    .month-days button.period { color: var(--coral-soft); }
+    .month-days button.projected { color: var(--turquoise-soft); box-shadow: inset 0 0 0 2px var(--turquoise); }
+    .month-days button .num { display: block; font-size: 14px; }
+    .month-days button .cycle-small { display: block; margin-bottom: 2px; color: rgba(255,255,255,.43); font-size: 8px; }
+    .month-days button .marker { display: block; min-height: 10px; margin-top: 3px; color: var(--heart); font-size: 12px; line-height: 10px; }
+    .month-days button.period:after { content: ""; position: absolute; left: 13%; right: 13%; bottom: 1px; height: 3px; border-radius: 99px; background: var(--coral); }
+    .month-days button.period.projected:after { border: 1px dashed var(--coral); background: transparent; }
+    .calendar-legend { display: flex; flex-wrap: wrap; gap: 9px 14px; margin: 12px 3px; color: var(--muted); font-size: 10px; }
+    .calendar-legend span { display: flex; align-items: center; gap: 5px; }
+    .legend-dot { width: 8px; height: 8px; display: inline-block; border-radius: 50%; background: var(--turquoise); }
+    .legend-dot.coral { background: var(--coral); }
+    .legend-ring { width: 9px; height: 9px; display: inline-block; border: 1px dashed var(--turquoise); border-radius: 50%; }
+    .back-button { width: 100%; margin-top: 13px; }
+    .sheet-backdrop { position: fixed; inset: 0; z-index: 30; display: none; align-items: end; background: rgba(5,4,10,.48); backdrop-filter: blur(5px); }
+    .sheet-backdrop.open { display: flex; }
+    .sheet { width: min(100%, 430px); max-height: 88vh; overflow: auto; margin: 0 auto; padding: 10px 18px calc(24px + env(safe-area-inset-bottom)); border: 1px solid var(--glass-line); border-bottom: 0; border-radius: 29px 29px 0 0; background: linear-gradient(160deg, rgba(255,255,255,.13), transparent 24%), rgba(28,22,49,.9); box-shadow: 0 -22px 80px rgba(0,0,0,.42); backdrop-filter: blur(30px) saturate(135%); animation: sheet .28s ease both; }
+    .grabber { width: 42px; height: 4px; margin: 4px auto 17px; border-radius: 99px; background: rgba(255,255,255,.28); }
+    .sheet-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 17px; }
+    .sheet-head h2 { margin: 0; font: 500 23px Georgia, serif; }
+    .close { width: 32px; height: 32px; border: 1px solid var(--glass-line); border-radius: 50%; background: rgba(255,255,255,.07); }
+    .choice-group { display: grid; gap: 8px; margin: 17px 0; }
+    .choice-group h3 { margin: 0 0 2px; color: var(--muted); font-size: 12px; font-weight: 500; }
+    .choices { display: flex; flex-wrap: wrap; gap: 8px; }
+    .choice { padding: 10px 12px; border: 1px solid var(--glass-line); border-radius: 99px; background: rgba(255,255,255,.06); color: var(--muted); font-size: 12px; }
+    .choice.active { border-color: var(--turquoise); color: var(--ink); background: rgba(57,190,200,.17); }
+    .choice.coral.active { border-color: var(--coral); background: rgba(245,125,138,.16); }
+    .sheet-primary { width: 100%; margin-top: 7px; }
+    .sheet-secondary { width: 100%; margin-top: 8px; background: transparent; border: 1px solid var(--glass-line); }
+    .period-hint { padding: 11px 13px; border-radius: 15px; color: var(--muted); background: rgba(245,125,138,.09); font-size: 11px; line-height: 1.45; }
+    .bottom-nav { position: sticky; bottom: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 24px; padding: 10px 8px; border-radius: 22px; }
+    .bottom-nav button { padding: 8px 4px; border: 0; background: transparent; color: var(--muted); font-size: 11px; }
+    .bottom-nav button.active { color: var(--turquoise-soft); }
+    .bottom-nav button { min-height: 42px; }
+    @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+    @keyframes sheet { from { opacity: 0; transform: translateY(100%); } to { opacity: 1; transform: none; } }
+    @media (min-width: 700px) { body { padding: 28px 0; } .app { min-height: 800px; border: 1px solid rgba(255,255,255,.12); border-radius: 36px; box-shadow: 0 30px 100px rgba(0,0,0,.32); } }
+    @media (prefers-reduced-motion: reduce) { *, *:before, *:after { animation: none !important; transition: none !important; } }
+  </style>
+</head>
+<body>
+  <div class="prototype-note">Демо-данные</div>
+  <main class="app">
+    <section class="day-view" id="dayView">
+      <header class="topbar">
+        <div><div class="wordmark">Nova</div><div class="subline">личный ритм · сегодня</div></div>
+        <div class="avatar">N</div>
+      </header>
+      <div class="week-strip glass" id="weekStrip"></div>
+      <section class="hero glass" id="hero"></section>
+      <div class="action-row">
+        <button class="action" data-sheet="period"><span class="action-icon">◌</span><span class="action-label">Месячные</span></button>
+        <button class="action" data-sheet="symptoms"><span class="action-icon">✦</span><span class="action-label">Симптомы</span></button>
+        <button class="action" data-sheet="sex"><span class="action-icon">♥</span><span class="action-label">Секс</span></button>
+      </div>
+      <div class="section-head"><h2>Совет на сегодня</h2><span>для тебя</span></div>
+      <article class="tip glass"><strong id="tipTitle">Дай телу немного тишины</strong><p id="tipText">Мягкая прогулка и вода могут помочь заметить, как меняется самочувствие в течение дня.</p></article>
+      <nav class="bottom-nav glass"><button class="active" id="todayNav">Сегодня</button><button id="openCalendarNav">Календарь</button><button id="settingsNav">Ещё</button></nav>
+    </section>
+
+    <section class="calendar-view" id="calendarView">
+      <header class="calendar-header"><button class="circle-button" id="prevMonth">‹</button><h2 id="monthTitle"></h2><button class="circle-button" id="nextMonth">›</button></header>
+      <div class="month-card glass"><div class="month-week"><span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Вс</span></div><div class="month-days" id="monthDays"></div></div>
+      <div class="calendar-legend"><span><i class="legend-dot coral"></i>месячные</span><span><i class="legend-dot"></i>овуляция</span><span><i class="legend-ring"></i>предположение</span><span>♥ секс</span></div>
+      <div class="period-hint glass">Пунктир показывает предположение. Цвет выбранного дня повторяет его состояние.</div>
+      <div class="period-tools glass" id="periodTools" hidden><p id="periodHint"></p><button class="button" id="savePeriod" disabled>Сохранить даты</button><button class="button secondary" id="cancelPeriod">Отмена</button></div>
+    </section>
+  </main>
+
+  <div class="sheet-backdrop" id="sheetBackdrop"><section class="sheet" id="sheet" role="dialog" aria-modal="true"></section></div>
+
+  <script>
+    const ruMonths = ['январь','февраль','март','апрель','май','июнь','июль','август','сентябрь','октябрь','ноябрь','декабрь'];
+    const weekNames = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+    const state = { selected: new Date(Date.UTC(2026, 10, 20)), month: new Date(Date.UTC(2026, 10, 1)), mode: 'day', role: 'owner', edit: null, periodDays: new Set(['2026-11-03','2026-11-04','2026-11-05']), sexDays: new Set(['2026-11-07','2026-11-12']), symptomDays: new Set(['2026-11-10','2026-11-12']) };
+    const iso = (date) => date.toISOString().slice(0, 10);
+    const prettyDate = (date) => new Date(date + 'T00:00:00Z').toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+    const dateFrom = (date) => new Date(date + 'T00:00:00Z');
+    const currentDate = () => iso(state.selected);
+    function cycleDay(date) { const start = new Date(Date.UTC(2026, 10, 3)); return Math.max(1, Math.round((dateFrom(date) - start) / 86400000) + 1); }
+    function dayState(date) { if (state.periodDays.has(date)) return 'period'; if (date === '2026-11-17') return 'ovulation'; if (date === '2026-11-16' || date === '2026-11-18' || date === '2026-11-19') return 'projected'; return 'ordinary'; }
+    function weekDates() { const monday = new Date(state.selected); const offset = (monday.getUTCDay() + 6) % 7; monday.setUTCDate(monday.getUTCDate() - offset); return Array.from({ length: 7 }, (_, index) => { const date = new Date(monday); date.setUTCDate(monday.getUTCDate() + index); return iso(date); }); }
+    function renderWeek() { const dates = weekDates(); document.getElementById('weekStrip').innerHTML = `<button class="week-arrow" data-week="-7" aria-label="Предыдущая неделя">‹</button>${dates.map((date) => `<button class="week-cell ${date === currentDate() ? 'selected' : ''} ${dayState(date)}" data-date="${date}" data-kind="${dayState(date)}"><span class="cycle-day">${cycleDay(date)}</span><span class="date">${Number(date.slice(-2))}</span><span class="tiny-mark">${state.role === 'owner' && state.sexDays.has(date) ? '♥' : ''}</span><span>${weekNames[(dateFrom(date).getUTCDay() + 6) % 7]}</span></button>`).join('')}<button class="week-arrow" data-week="7" aria-label="Следующая неделя">›</button>`; document.querySelectorAll('.week-cell').forEach((button) => button.addEventListener('click', () => { state.selected = dateFrom(button.dataset.date); render(); })); document.querySelectorAll('.week-arrow').forEach((button) => button.addEventListener('click', () => { state.selected = dateFrom(iso(new Date(dateFrom(currentDate()).getTime() + Number(button.dataset.week) * 86400000))); render(); })); }
+    function renderHero() { const date = currentDate(); const kind = dayState(date); const copy = kind === 'period' ? ['Менструация', 'Отмеченный день месячных'] : kind === 'ovulation' ? ['Овуляция', 'Расчётный день овуляции'] : kind === 'projected' ? ['Предположение', 'Возможное изменение цикла'] : ['Спокойный день', 'Можно отметить самочувствие']; document.getElementById('hero').innerHTML = `<span class="eyebrow">${prettyDate(date)}</span><div class="cycle-orb ${kind}"><div class="orb-content"><span class="orb-label">день цикла</span><strong class="orb-title">${cycleDay(date)}</strong><span class="orb-cycle">${copy[0]}</span></div></div><div class="hero-date">${copy[1]}</div>`; document.getElementById('tipTitle').textContent = kind === 'period' ? 'Позаботься о комфорте' : kind === 'ovulation' ? 'Наблюдай за сигналами тела' : 'Дай телу немного тишины'; document.getElementById('tipText').textContent = kind === 'period' ? 'Отметь симптомы, настроение или таблетки, чтобы вернуться к ним позже.' : kind === 'ovulation' ? 'Это приблизительное предположение по истории цикла и не является медицинским измерением.' : 'Мягкая прогулка и вода могут помочь заметить, как меняется самочувствие в течение дня.'; }
+    function renderCalendar() { const month = state.month; document.getElementById('monthTitle').textContent = `${ruMonths[month.getUTCMonth()]} ${month.getUTCFullYear()}`; const first = new Date(Date.UTC(month.getUTCFullYear(), month.getUTCMonth(), 1)); const offset = (first.getUTCDay() + 6) % 7; const count = new Date(Date.UTC(month.getUTCFullYear(), month.getUTCMonth() + 1, 0)).getUTCDate(); const cells = [...Array(offset).fill(null), ...Array.from({ length: count }, (_, index) => `${month.getUTCFullYear()}-${String(month.getUTCMonth() + 1).padStart(2, '0')}-${String(index + 1).padStart(2, '0')}`)]; document.getElementById('monthDays').innerHTML = cells.map((date) => date ? `<button class="${date === currentDate() ? 'selected ' : ''}${dayState(date)}" data-date="${date}"><span class="cycle-small">${cycleDay(date)}</span><span class="num">${Number(date.slice(-2))}</span><span class="marker">${state.sexDays.has(date) ? '♥' : state.symptomDays.has(date) ? '•' : ''}</span></button>` : '<span></span>').join(''); document.querySelectorAll('#monthDays button').forEach((button) => button.addEventListener('click', () => { state.selected = dateFrom(button.dataset.date); state.mode = 'day'; document.getElementById('calendarView').classList.remove('open'); document.getElementById('dayView').classList.remove('hidden'); render(); })); }
+    function render() { renderWeek(); renderHero(); renderCalendar(); }
+    function openSheet(type) { const date = currentDate(); const sheet = document.getElementById('sheet'); if (type === 'period') sheet.innerHTML = `<div class="grabber"></div><header class="sheet-head"><h2>Месячные</h2><button class="close" data-close>×</button></header><div class="period-hint">Выбери дни месячных в календаре. Отмеченные дни будут коралловыми, предположение — коралловым пунктиром.</div><div class="choice-group"><h3>Для выбранного дня · ${prettyDate(date)}</h3><div class="choices"><button class="choice coral ${state.periodDays.has(date) ? 'active' : ''}" id="togglePeriod">${state.periodDays.has(date) ? 'Месячные отмечены' : 'Отметить месячные'}</button></div></div><button class="button sheet-primary" id="periodCalendar">Открыть календарь месячных</button>`; if (type === 'symptoms') sheet.innerHTML = `<div class="grabber"></div><header class="sheet-head"><h2>Симптомы</h2><button class="close" data-close>×</button></header><p class="muted">${prettyDate(date)} · выбери то, что подходит сегодня</p><div class="choice-group"><h3>Настроение</h3><div class="choices" data-choice="mood"><button class="choice">Спокойно</button><button class="choice">Хорошо</button><button class="choice">Тревожно</button><button class="choice">Грустно</button></div></div><div class="choice-group"><h3>Симптомы</h3><div class="choices" data-choice="symptoms"><button class="choice">Боль</button><button class="choice">Головная боль</button><button class="choice">Усталость</button><button class="choice">Чувствительность</button></div></div><div class="choice-group"><h3>Вагинальные выделения</h3><div class="choices" data-choice="discharge"><button class="choice">Нет</button><button class="choice">Кремовые</button><button class="choice">Прозрачные</button><button class="choice">Необычные</button></div></div><div class="choice-group"><h3>Пищеварение и стул</h3><div class="choices" data-choice="digestion"><button class="choice">Обычно</button><button class="choice">Вздутие</button><button class="choice">Запор</button><button class="choice">Диарея</button></div></div><div class="choice-group"><h3>Таблетки</h3><div class="choices"><button class="choice" id="pillButton">Принята</button><button class="choice">Настроить напоминание</button></div></div><button class="button sheet-primary" data-close>Сохранить симптомы</button>`; if (type === 'sex') sheet.innerHTML = `<div class="grabber"></div><header class="sheet-head"><h2>Секс</h2><button class="close" data-close>×</button></header><p class="muted">Отметка останется приватной и будет видна на календаре только тебе.</p><div class="choice-group"><h3>${prettyDate(date)}</h3><div class="choices"><button class="choice coral ${state.sexDays.has(date) ? 'active' : ''}" id="toggleSex">${state.sexDays.has(date) ? '♥ Отмечено' : 'Отметить секс'}</button></div></div><button class="button sheet-primary" data-close>Готово</button>`; document.querySelectorAll('[data-close]').forEach((button) => button.addEventListener('click', closeSheet)); document.querySelectorAll('.choices').forEach((group) => group.addEventListener('click', (event) => { const button = event.target.closest('.choice'); if (button && !button.id) { group.querySelectorAll('.choice').forEach((item) => item.classList.remove('active')); button.classList.add('active'); } })); document.getElementById('togglePeriod')?.addEventListener('click', () => { state.periodDays.has(date) ? state.periodDays.delete(date) : state.periodDays.add(date); openSheet('period'); render(); }); document.getElementById('toggleSex')?.addEventListener('click', () => { state.sexDays.has(date) ? state.sexDays.delete(date) : state.sexDays.add(date); openSheet('sex'); render(); }); document.getElementById('periodCalendar')?.addEventListener('click', () => { closeSheet(); document.getElementById('dayView').classList.add('hidden'); document.getElementById('calendarView').classList.add('open'); }); document.getElementById('pillButton')?.addEventListener('click', (event) => event.currentTarget.classList.toggle('active')); document.getElementById('sheetBackdrop').classList.add('open'); }
+    function closeSheet() { document.getElementById('sheetBackdrop').classList.remove('open'); }
+    document.querySelectorAll('[data-sheet]').forEach((button) => button.addEventListener('click', () => openSheet(button.dataset.sheet)));
+    document.getElementById('openCalendar').addEventListener('click', () => { document.getElementById('dayView').classList.add('hidden'); document.getElementById('calendarView').classList.add('open'); });
+    document.getElementById('openCalendarNav').addEventListener('click', () => { document.getElementById('dayView').classList.add('hidden'); document.getElementById('calendarView').classList.add('open'); });
+    document.getElementById('backToDay').addEventListener('click', () => { document.getElementById('calendarView').classList.remove('open'); document.getElementById('dayView').classList.remove('hidden'); render(); });
+    document.getElementById('prevMonth').addEventListener('click', () => { state.month = new Date(Date.UTC(state.month.getUTCFullYear(), state.month.getUTCMonth() - 1, 1)); renderCalendar(); });
+    document.getElementById('nextMonth').addEventListener('click', () => { state.month = new Date(Date.UTC(state.month.getUTCFullYear(), state.month.getUTCMonth() + 1, 1)); renderCalendar(); });
+    document.getElementById('sheetBackdrop').addEventListener('click', (event) => { if (event.target.id === 'sheetBackdrop') closeSheet(); });
+    render();
+  </script>
+</body>
+</html>

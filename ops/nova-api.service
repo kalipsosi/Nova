@@ -1,0 +1,22 @@
+[Unit]
+Description=Nova API
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=nova
+Group=nova
+WorkingDirectory=/var/www/nova/backend
+EnvironmentFile=/etc/nova/nova.env
+ExecStart=/usr/bin/node /var/www/nova/backend/dist/index.js
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/www/nova
+
+[Install]
+WantedBy=multi-user.target

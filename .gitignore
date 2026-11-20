@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.env
+.env.production
+*.log
+backups/
+*.age
+*.enc
+*.dump
+.DS_Store
+miniapp/dist/
+*.tsbuildinfo
